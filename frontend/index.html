@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QueryNest</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="style.css?v=4" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon" aria-hidden="true">✦</span>
+        <div>
+          <span class="logo-text"
+            >Query<span class="logo-accent">Nest</span></span
+          >
+          <span class="logo-subtitle">Personal document intelligence</span>
+        </div>
+      </div>
+      <div class="header-meta">PRIVATE RAG WORKSPACE</div>
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot"></span>
+        <span id="statusText">0 sources</span>
+      </div>
+    </header>
+
+    <div class="workspace-banner" aria-label="Project overview">
+      <div class="workspace-intro">
+        <span class="workspace-badge">AI document copilot</span>
+        <strong>Your private knowledge workspace</strong>
+        <span
+          >Upload source material, then ask precise questions with
+          context.</span
+        >
+      </div>
+      <div class="workspace-stats">
+        <div>
+          <strong id="workspaceSources">0</strong>
+          <span>sources indexed</span>
+        </div>
+        <div>
+          <strong id="workspaceChunks">0</strong>
+          <span>knowledge chunks</span>
+        </div>
+        <div>
+          <strong>Top 5</strong>
+          <span>retrieval depth</span>
+        </div>
+      </div>
+    </div>
+
+    <main class="layout">
+      <!-- Left panel: Upload -->
+      <aside class="panel panel-upload">
+        <div class="panel-heading">
+          <div class="panel-heading-row">
+            <div>
+              <span class="eyebrow">Knowledge base</span>
+              <h2 class="panel-title">Your sources</h2>
+            </div>
+            <span class="panel-live"><span></span> Live</span>
+          </div>
+          <p class="panel-subtitle">
+            Add trusted files to ground every answer.
+          </p>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon" aria-hidden="true">
+            <div class="source-prism"><span></span><i></i><b></b></div>
+          </div>
+          <p class="dropzone-label">Upload a source</p>
+          <p class="dropzone-hint">Drop a file or browse your device</p>
+          <p class="dropzone-types">Supported: .txt · .md · .pdf</p>
+          <input type="file" id="fileInput" accept=".txt,.md,.pdf" hidden />
+        </div>
+
+        <button class="btn btn-primary" id="uploadBtn" disabled>
+          <span aria-hidden="true">+</span> Index source
+        </button>
+        <div class="upload-progress" id="uploadProgress" hidden>
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="upload-status" id="uploadStatus"></p>
+        <div class="pipeline" id="pipeline">
+          <div class="pipeline-heading">
+            <span>Indexing pipeline</span><span>Ready</span>
+          </div>
+          <div class="pipeline-step" data-stage="reading">
+            <span></span>Reading text
+          </div>
+          <div class="pipeline-step" data-stage="chunking">
+            <span></span>Chunking content
+          </div>
+          <div class="pipeline-step" data-stage="embedding">
+            <span></span>Generating embeddings
+          </div>
+          <div class="pipeline-step" data-stage="indexing">
+            <span></span>Updating search index
+          </div>
+        </div>
+
+        <div class="sidebar-note">
+          <span class="sidebar-note-icon">◈</span>
+          <div>
+            <strong>Private by default</strong>
+            <p>Your files stay in this workspace while you work.</p>
+          </div>
+        </div>
+
+        <div class="doc-list" id="docList">
+          <div class="doc-list-heading">
+            <span>Indexed files</span>
+            <span id="docCount">0</span>
+          </div>
+          <p class="doc-empty">
+            No sources yet. Your indexed files will appear here.
+          </p>
+        </div>
+      </aside>
+
+      <!-- Right panel: Chat -->
+      <section class="panel panel-chat">
+        <div class="chat-toolbar">
+          <div>
+            <span class="eyebrow">Query assistant</span>
+            <p class="chat-context">
+              Search and reason across your indexed knowledge base
+            </p>
+          </div>
+          <div class="chat-actions">
+            <span class="context-badge">Source-aware</span>
+            <span class="assistant-state"><span></span> Ready</span>
+            <button
+              class="icon-btn"
+              id="newChatBtn"
+              type="button"
+              title="Start a new conversation"
+              aria-label="Start a new conversation"
+            >
+              ↻
+            </button>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="ambient-orbit" aria-hidden="true">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="core"><span>✦</span></div>
+          </div>
+          <div class="welcome-msg">
+            <p class="eyebrow">Retrieval workspace</p>
+            <h3>Ask QueryNest.</h3>
+            <p>
+              Upload your documents and turn them into a private, searchable
+              knowledge base.
+            </p>
+            <div class="starter-grid">
+              <button
+                class="starter"
+                type="button"
+                data-question="Summarize the main ideas in this document"
+              >
+                Summarize the main ideas <span>↗</span>
+              </button>
+              <button
+                class="starter"
+                type="button"
+                data-question="What are the key concepts I should understand?"
+              >
+                Find the key concepts <span>↗</span>
+              </button>
+              <button
+                class="starter"
+                type="button"
+                data-question="Explain the most important process step by step"
+              >
+                Explain a process <span>↗</span>
+              </button>
+            </div>
+            <div class="welcome-note">
+              <span>⌁</span> Answers are grounded in your indexed documents.
+            </div>
+          </div>
+        </div>
+
+        <form class="chat-input-bar" id="chatForm">
+          <input
+            class="chat-input"
+            id="chatInput"
+            type="text"
+            placeholder="Ask a question…"
+            autocomplete="off"
+          />
+          <button class="btn btn-send" id="sendBtn" type="submit">
+            <span id="sendIcon" aria-hidden="true">↗</span>
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
