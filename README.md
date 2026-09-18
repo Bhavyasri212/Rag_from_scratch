@@ -1,178 +1,200 @@
 # QueryNest
 
-QueryNest is a local-first, document-aware AI assistant that lets users upload text-based source files, index them into a custom retrieval pipeline, and ask grounded questions about the content.
+QueryNest is a local-first document question-answering application built around a custom Retrieval-Augmented Generation (RAG) pipeline. Upload TXT, Markdown, or PDF files, index their content, and ask questions with answers grounded in the retrieved source material.
 
-This project demonstrates a production-style Retrieval-Augmented Generation (RAG) workflow built from scratch using Python, FastAPI, and a lightweight frontend interface.
+The project combines a FastAPI backend, a lightweight browser client, and independently implemented ingestion, chunking, embedding, retrieval, and generation components.
 
----
+## Highlights
 
-## Why this project matters
+- Upload and index `.txt`, `.md`, and `.pdf` documents
+- Track ingestion progress from upload through vector indexing
+- Split documents into overlapping searchable chunks
+- Generate local embeddings with Sentence Transformers
+- Retrieve relevant context with cosine similarity search
+- Generate answers with Ollama or OpenAI-compatible backends
+- Return source citations with relevance scores and snippets
+- Use the responsive frontend without a JavaScript build step
 
-This project was built to show:
-
-- document ingestion and preprocessing
-- chunking and retrieval logic
-- embedding-based semantic search
-- prompt construction with context grounding
-- a basic AI-powered Q&A workflow over local files
-
-It is a strong portfolio project because it combines core AI engineering concepts with a usable product interface.
-
----
-
-## Architecture overview
+## Architecture
 
 ```text
-User uploads file
-       │
-       ▼
-Frontend UI (HTML + CSS + JS)
-       │
-       ▼
-FastAPI backend
-       │
-       ├── file validation and upload handling
-       ├── ingestion job tracking
-       ├── chunking and indexing pipeline
-       └── query endpoint with retrieval + generation
-       │
-       ▼
-Custom RAG components
-- loader.py  -> read and normalize input files
-- chunker.py -> split text into overlapping chunks
-- embedder.py -> generate vector representations
-- vector_store.py -> store and search embeddings
-- retriever.py -> return top-k relevant chunks
-- generator.py -> produce grounded answers
-
-Final result: answer + citations + source references
+Browser client
+    |
+    | upload document / ask question
+    v
+FastAPI application
+    |
+    +-- Ingestion route
+    |     +-- validate upload
+    |     +-- extract document text
+    |     +-- create overlapping chunks
+    |     +-- generate embeddings
+    |     +-- store vectors in memory
+    |
+    +-- Query route
+          +-- embed the question
+          +-- retrieve top-k chunks
+          +-- build grounded prompt
+          +-- generate answer
+          +-- return citations
 ```
 
----
+The runtime state is intentionally local and in memory. Restarting the API clears the current document index.
 
-## Project structure
+## Repository structure
 
 ```text
 rag_from_scratch/
 ├── api/
-│   ├── main.py
-│   ├── models.py
-│   ├── state.py
+│   ├── main.py                 # FastAPI application and health endpoints
+│   ├── models.py               # Request and response schemas
+│   ├── state.py                # Shared RAG service state
 │   └── routes/
-│       ├── ingest.py
-│       └── query.py
+│       ├── ingest.py           # Upload and indexing workflow
+│       └── query.py            # Retrieval and answer generation
 ├── frontend/
-│   ├── index.html
-│   ├── app.js
-│   ├── style.css
-│   ├── favicon.svg
-│   └── assets/
+│   ├── index.html              # Application shell
+│   ├── app.js                  # Upload, polling, and chat behavior
+│   ├── style.css               # Responsive product interface
+│   └── favicon.svg             # Browser icon
 ├── rag/
-│   ├── chunker.py
-│   ├── embedder.py
-│   ├── evaluator.py
-│   ├── generator.py
-│   ├── loader.py
-│   ├── prompt_builder.py
-│   ├── retriever.py
-│   └── vector_store.py
-├── tests/
-│   ├── test_loader.py
-│   └── test_api_health.py
-├── .env.example
-├── .gitignore
-├── Dockerfile
-├── requirements.txt
-├── README.md
+│   ├── loader.py               # TXT, Markdown, and PDF loading
+│   ├── chunker.py              # Chunking strategies
+│   ├── embedder.py             # Embedding backends
+│   ├── vector_store.py         # In-memory vector search
+│   ├── retriever.py            # Top-k retrieval
+│   ├── prompt_builder.py       # Grounded prompt construction
+│   ├── generator.py            # LLM integrations
+│   └── evaluator.py            # Retrieval evaluation helpers
+├── tests/                      # Unit and API tests
+├── .env.example                # Safe configuration template
+├── requirements.txt            # Python dependencies
+└── README.md
 ```
-
----
-
-## Features
-
-- upload local documents in TXT, MD, or PDF format
-- parse and normalize content
-- split text into smaller knowledge chunks
-- embed and store document chunks in memory
-- retrieve the most relevant chunks for a question
-- return grounded answers based on matched context
-- show document metadata and source references in the UI
-- provide a responsive interface for local document Q&A
-
----
 
 ## Local setup
 
+### 1. Clone the repository
+
 ```bash
-# 1. Clone the repository
-git clone <your-repo-url>
-cd rag_from_scratch
-
-# 2. Create a virtual environment
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-# source .venv/bin/activate  # macOS/Linux
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Copy the example environment file
-copy .env.example .env      # Windows
-# cp .env.example .env      # macOS/Linux
-
-# 5. Start the backend
-uvicorn api.main:app --reload
+git clone https://github.com/Bhavyasri212/Rag_from_scratch.git
+cd Rag_from_scratch
 ```
 
-Then open the frontend locally:
+### 2. Create and activate a virtual environment
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+macOS or Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 4. Configure the application
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+macOS or Linux:
+
+```bash
+cp .env.example .env
+```
+
+The default configuration uses local Sentence Transformers embeddings and Ollama generation. Install Ollama separately, then make a model available:
+
+```bash
+ollama pull llama3
+```
+
+### 5. Start the backend
+
+```bash
+python -m uvicorn api.main:app --reload
+```
+
+The API is available at `http://localhost:8000`.
+
+### 6. Start the frontend
+
+In a second terminal:
 
 ```bash
 python -m http.server 5500 --directory frontend
 ```
 
-Visit:
+Open `http://localhost:5500` in a browser.
 
-- API: http://localhost:8000/docs
-- Frontend: http://localhost:5500
+## API reference
 
----
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | Service information |
+| `GET` | `/health` | API and document-index health |
+| `GET` | `/documents` | List indexed document sources |
+| `POST` | `/ingest/` | Queue a document for indexing |
+| `GET` | `/ingest/status/{job_id}` | Read indexing progress |
+| `POST` | `/query/` | Ask a question against indexed content |
+| `GET` | `/docs` | Interactive Swagger documentation |
+| `GET` | `/redoc` | ReDoc API documentation |
 
-## Environment variables
+Example query request:
 
-Use the values in `.env.example` as a template.
+```json
+{
+  "question": "What are the main ideas in this document?",
+  "k": 5
+}
+```
 
-| Variable                | Purpose                             |
-| ----------------------- | ----------------------------------- |
-| `EMBEDDING_BACKEND`     | Select local or OpenAI embeddings   |
-| `LOCAL_EMBEDDING_MODEL` | Default sentence-transformers model |
-| `LLM_BACKEND`           | Use Ollama or OpenAI generation     |
-| `OLLAMA_MODEL`          | Local model name for Ollama         |
-| `CHUNK_SIZE`            | Number of characters per chunk      |
-| `CHUNK_OVERLAP`         | Overlap between adjacent chunks     |
-| `TOP_K`                 | Number of chunks to retrieve        |
+The query response includes the generated answer and source citations containing the source name, page number, similarity score, and retrieved snippet.
 
----
+## Configuration
+
+Copy `.env.example` to `.env` and adjust the values for your selected providers.
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `EMBEDDING_BACKEND` | `local` or `openai` | `local` |
+| `LOCAL_EMBEDDING_MODEL` | Sentence Transformers model | `sentence-transformers/all-MiniLM-L6-v2` |
+| `LLM_BACKEND` | `ollama` or `openai` | `ollama` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
+| `OLLAMA_MODEL` | Ollama generation model | `llama3` |
+| `OLLAMA_KEEP_ALIVE` | Ollama model lifetime | `10m` |
+| `OLLAMA_NUM_PREDICT` | Maximum generated tokens | `256` |
+| `CHUNK_SIZE` | Chunk size in characters | `500` |
+| `CHUNK_OVERLAP` | Overlap between chunks | `50` |
+| `TOP_K` | Default retrieval depth | `5` |
+| `OPENAI_API_KEY` | Required for OpenAI backends | Not set |
+| `OPENAI_EMBEDDING_MODEL` | OpenAI embedding model | `text-embedding-3-small` |
+| `OPENAI_LLM_MODEL` | OpenAI chat model | `gpt-4o-mini` |
+
+Never commit `.env` or API keys. Use `.env.example` as the public configuration template.
 
 ## Testing
 
+Run the complete test suite from the repository root:
+
 ```bash
-pytest
+pytest -q
 ```
 
-The project includes loader and API health checks to validate core functionality.
+The tests cover document loading, text chunking, vector-store behavior, and basic API health/document endpoints.
 
----
-
-## Deployment notes
-
-This project is designed as a small full-stack AI application. The frontend can be served as static files, while the FastAPI backend can run on Render, Railway, or another Python-capable host. Store environment variables in the hosting provider rather than committing them.
-
-Because the current app stores indexed data in memory, deployment should be paired with persistent storage if you want a production-grade multi-user system.
-
----
-
-## Resume-ready summary
-
-QueryNest is a full-stack Retrieval-Augmented Generation application for document-based Q&A. It includes file ingestion, chunking, embeddings, semantic retrieval, and a polished frontend interface for querying local knowledge sources.
-
-This project demonstrates practical AI engineering skills in backend API design, vector retrieval, prompt grounding, and product-level UX for a document assistant.
